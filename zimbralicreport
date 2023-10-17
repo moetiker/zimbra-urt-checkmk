@@ -8,6 +8,15 @@ my %replacements = (
     'SE' => 'Standard_Edition'
 );
 
+sub fix {
+   my $string = shift;
+   $string =~ s/Business_Email/BusiEmail/g;
+   $string =~ s/Professional_Edition/ProfEmail/g;
+   $string =~ s/Standard_Edition/StandEmail/g;
+   return $string
+}
+
+
 my $newest_file;
 my @files = glob("/opt/zurt/data/mailbox*");
 @files = sort { -M $a <=> -M $b } @files;
@@ -38,16 +47,13 @@ close $file;
 
 foreach my $domains (keys %count_name_lictype_domain) {
     print "0 \"Zimbra Licences $domains\" ";
-    #my $first = 1; # Flag to check if it's the first license type
     my @count;
     my @comment;
     foreach my $lictype (keys %all_lictypes) {
         my $count_lictype = $count_name_lictype_domain{$domains}{$lictype} || 0;
         push @count,"$lictype=$count_lictype";
-        $lictype =~ s/Business_Email/BusiEmail/g;
-        $lictype =~ s/Professional_Edition/ProfEmail/g;
-        $lictype =~ s/Standard_Edition/StandEmail/g;
-        push @comment,"$lictype->$count_lictype";
+        my $lictype_short = fix $lictype;
+        push @comment,"$lictype_short->$count_lictype";
     }
     print join("|",@count);
     print " ";
@@ -61,10 +67,8 @@ my @comment;
 foreach my $lictype (keys %all_lictypes) {
     my $count_lictype = $count_name_lictype{$lictype} || 0;
     push @count,"$lictype=$count_lictype";
-    $lictype =~ s/Business_Email/BusiEmail/g;
-    $lictype =~ s/Professional_Edition/ProfEmail/g;
-    $lictype =~ s/Standard_Edition/StandEmail/g;
-    push @comment,"$lictype->$count_lictype";
+    my $lictype_short = fix $lictype;
+    push @comment,"$lictype_short->$count_lictype";
 }
 print join("|",@count);
 print " ";
