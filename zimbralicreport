@@ -15,7 +15,10 @@ my @files = glob("/opt/zurt/data/mailbox*");
 open my $file, '<', $files[0] or die "Could not open file: $!";
 my $header = <$file>;
 
+
 my %count_name_lictype_domain;
+my %count_name_lictype;
+
 my %all_lictypes;
 
 while (<$file>) {
@@ -27,6 +30,7 @@ while (<$file>) {
     $lictype = $replacements{$lictype} if exists $replacements{$lictype};
 
     $count_name_lictype_domain{$domains}{$lictype}++;
+    $count_name_lictype{$lictype}++;
     $all_lictypes{$lictype} = 1; # Collect all unique license types
 }
 
@@ -34,29 +38,35 @@ close $file;
 
 foreach my $domains (keys %count_name_lictype_domain) {
     print "0 \"Zimbra Licences $domains\" ";
-    my $first = 1; # Flag to check if it's the first license type
+    #my $first = 1; # Flag to check if it's the first license type
+    my @count;
+    my @comment;
     foreach my $lictype (keys %all_lictypes) {
         my $count_lictype = $count_name_lictype_domain{$domains}{$lictype} || 0;
-        if ($first) {
-            print "$lictype=$count_lictype";
-            $first = 0; # Set the flag to false after the first license type is printed
-        } else {
-            print "|$lictype=$count_lictype";
-        }
-    }
-    print " ";
-    $first = 1; # Reset the flag for the second loop
-    foreach my $lictype (keys %all_lictypes) {
-        my $count_lictype = $count_name_lictype_domain{$domains}{$lictype} || 0;
+        push @count,"$lictype=$count_lictype";
         $lictype =~ s/Business_Email/BusiEmail/g;
-        $lictype =~ s/Professional_Edition/ProfEmail/;
-        $lictype =~ s/Standard_Edition/StandEmail/;
-        if ($first) {
-            print " $lictype->$count_lictype";
-            $first = 0; # Set the flag to false after the first license type is printed
-        } else {
-            print " $lictype->$count_lictype";
-        }
+        $lictype =~ s/Professional_Edition/ProfEmail/g;
+        $lictype =~ s/Standard_Edition/StandEmail/g;
+        push @comment,"$lictype->$count_lictype";
     }
+    print join("|",@count);
+    print " ";
+    print join(", ",@comment);
     print "\n";
+ }
+
+print "0 \"Zimbra Licences Summary\" ";
+my @count;
+my @comment;
+foreach my $lictype (keys %all_lictypes) {
+    my $count_lictype = $count_name_lictype{$lictype} || 0;
+    push @count,"$lictype=$count_lictype";
+    $lictype =~ s/Business_Email/BusiEmail/g;
+    $lictype =~ s/Professional_Edition/ProfEmail/g;
+    $lictype =~ s/Standard_Edition/StandEmail/g;
+    push @comment,"$lictype->$count_lictype";
 }
+print join("|",@count);
+print " ";
+print join(", ",@comment);
+print "\n";
